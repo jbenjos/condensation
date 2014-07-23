@@ -1,0 +1,44 @@
+{
+  "variables": {
+    "spark_version": "",
+    "scala_version": "",
+    "condensation_version": "latest",
+    "zk_conn": "localhost:2181,/mesos",
+    "zk_quorum": "1",
+    "domain": "example.com"
+  },
+
+  "builders": [
+    {
+      "type": "docker",
+      "image": "jbenjos/compute:{{user `condensation_version`}}",
+      "pull": false,
+      "export_path": "_builds/processor-worker.docker.tgz"
+    }
+  ],
+  
+  "post-processors": [
+    {
+      "type": "docker-import",
+      "repository": "jbenjos/compute-worker",
+      "tag": "{{user `condensation_version`}}",
+      "latest": true
+    }
+  ],
+  
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "_configs/start-mesos-worker",
+      "destination": "/usr/local/bin/start-mesos-worker"      
+    },
+    {
+      "type": "shell",
+      "inline": [
+                  "mkdir -p /data/mesos/work_dir",
+                  "echo \"{{user `zk_conn`}}\" > /etc/.condensation_zk_conn",
+                  "chmod 755 /usr/local/bin/start-mesos-worker"
+                ]
+    }
+  ]
+}

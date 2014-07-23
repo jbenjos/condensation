@@ -1,0 +1,6 @@
+#!/bin/sh
+
+service zookeeper-server start
+while [[ $(service zookeeper-server status) =~ "not running" ]]; do
+	wait 1
+done

@@ -1,0 +1,59 @@
+{
+  "variables": {
+    "spark_version": "",
+    "scala_version": "",
+    "condensation_version": "latest",
+    "domain": "example.com",
+    "zk_conn": "localhost:2181,/mesos",
+    "zk_quorum": "1"
+  },
+
+  "builders": [
+    {
+      "type": "docker",
+      "image": "centos:centos6",
+      "export_path": "_builds/compute.docker.tgz"
+    }
+  ],
+
+  "post-processors": [
+    {
+      "type": "docker-import",
+      "repository": "jbenjos/compute",
+      "tag": "{{user `condensation_version`}}",
+      "latest": true
+    }
+  ],
+
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+                  "mkdir -p /opt/spark/ /opt/scala/",
+                  "curl -sSfL http://archive.cloudera.com/cdh4/one-click-install/redhat/6/x86_64/cloudera-cdh-4-0.x86_64.rpm --output /tmp/cdh.rpm",
+                  "curl -sSfL http://archive.cloudera.com/cdh4/redhat/6/x86_64/cdh/RPM-GPG-KEY-cloudera --output /tmp/cdh.key",
+                  "rpm --import /tmp/cdh.key",
+                  "yum localinstall -y /tmp/cdh.rpm",
+                  "yum install -y java-1.7.0-openjdk zookeeper-server python-setuptools",
+                  "service zookeeper-server init",
+                  "echo 1 | tee -a /var/lib/zookeeper/myid >/dev/null",
+                  "curl -sSfL http://downloads.mesosphere.io/master/centos/6/mesos_0.19.0_x86_64.rpm --output /tmp/mesos.rpm",
+                  "yum localinstall -y /tmp/mesos.rpm",
+                  "iptables -F",
+                  "iptables save",
+                  "curl -sSfL http://downloads.mesosphere.io/master/centos/6/mesos-0.19.0_rc2-py2.6.egg --output /tmp/mesos.egg",
+                  "easy_install --allow-hosts pypi.python.org /tmp/mesos.egg"
+                ]
+    },
+    {
+      "type": "file",
+      "source": "_externals/spark-{{user `spark_version`}}-bin-hadoop2/",
+      "destination": "/opt/spark/"
+    },
+    {
+      "type": "file",
+      "source": "_externals/scala-{{user `scala_version`}}/",
+      "destination": "/opt/scala/"
+    }
+  ]
+}

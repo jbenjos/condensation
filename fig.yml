@@ -1,0 +1,12 @@
+master:
+  image: jbenjos/compute-master
+  command: start-mesos-master >> /var/log/mesos-cmd-log &
+  ports: 
+    - "5051"
+    - "2181"
+worker:
+  image: jbenjos/compute-worker
+  command: start-mesos-worker >> /var/log/mesos-cmd-log &
+  links:
+    - master
+    

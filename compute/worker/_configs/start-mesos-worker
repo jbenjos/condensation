@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [[ -n $MASTER_1_PORT_2181_TCP_ADDR ]]; then
+  ZK_CONN="${MASTER_1_PORT_2181_TCP_ADDR}:2181,/mesos"
+else
+  ZK_CONN=$(cat /etc/.condensation_zk_conn)
+fi
+
+mesos-slave --master="zk://${ZK_CONN}"
